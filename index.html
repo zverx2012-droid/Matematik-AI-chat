@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Matematik chat AI</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      padding: 15px;
+      background: linear-gradient(135deg, #07111f, #17375e);
+      color: white;
+      font-family: Arial, sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .app {
+      width: 100%;
+      max-width: 700px;
+      height: 90vh;
+      background: #101827;
+      border: 2px solid #3974ea;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    header {
+      padding: 18px;
+      text-align: center;
+      background: #18243b;
+    }
+
+    header h1 {
+      margin: 0;
+      font-size: 25px;
+    }
+
+    header p {
+      margin: 7px 0 0;
+      color: #bdc9e6;
+    }
+
+    #chat {
+      flex: 1;
+      padding: 18px;
+      overflow-y: auto;
+    }
+
+    .message {
+      max-width: 85%;
+      padding: 12px 15px;
+      margin-bottom: 12px;
+      border-radius: 14px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .ai {
+      background: #263550;
+      border-bottom-left-radius: 4px;
+    }
+
+    .user {
+      margin-left: auto;
+      background: #2864df;
+      border-bottom-right-radius: 4px;
+    }
+
+    .examples {
+      padding: 10px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      background: #121c2e;
+    }
+
+    .examples button {
+      flex: 1;
+      min-width: 100px;
+      padding: 9px;
+      background: #2a3d62;
+      font-size: 13px;
+    }
+
+    #inputArea {
+      display: flex;
+      gap: 8px;
+      padding: 14px;
+      background: #18243b;
+    }
+
+    input {
+      flex: 1;
+      min-width: 0;
+      padding: 14px;
+      border: 1px solid #4a6390;
+      border-radius: 12px;
+      background: #0b1321;
+      color: white;
+      font-size: 17px;
+      outline: none;
+    }
+
+    button {
+      border: none;
+      border-radius: 11px;
+      padding: 12px 18px;
+      background: #376be4;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+
+    button:active {
+      transform: scale(0.96);
+    }
+  </style>
+</head>
+
+<body>
+
+  <main class="app">
+    <header>
+      <h1> Matematik chat AI</h1>
+      <p>Misol yozing va javobini oling</p>
+    </header>
+
+    <section id="chat">
+      <div class="message ai">
+Salom! Misol yozing.
+
+Masalan:
+20367*(45674+45747)
+      </div>
+    </section>
+
+    <div class="examples">
+      <button type="button" onclick="setExample('20367*(45674+45747)')">
+        Katta misol
+      </button>
+
+      <button type="button" onclick="setExample('(25+15)*4')">
+        Qavs
+      </button>
+
+      <button type="button" onclick="setExample('144/12')">
+        Bo‘lish
+      </button>
+
+      <button type="button" onclick="setExample('2^10')">
+        Daraja
+      </button>
+    </div>
+
+    <div id="inputArea">
+      <input
+        id="mathInput"
+        type="text"
+        inputmode="text"
+        placeholder="Masalan: 25*(10+5)"
+      >
+
+      <button type="button" id="sendButton">
+        Yuborish
+      </button>
+    </div>
+  </main>
+
+  <script>
+    const chat = document.getElementById("chat");
+    const mathInput = document.getElementById("mathInput");
+    const sendButton = document.getElementById("sendButton");
+
+    function addMessage(text, type) {
+      const div = document.createElement("div");
+
+      div.className = "message " + type;
+      div.textContent = text;
+
+      chat.appendChild(div);
+      chat.scrollTop = chat.scrollHeight;
+    }
+
+    function formatNumber(number) {
+      return new Intl.NumberFormat("uz-UZ", {
+        maximumFractionDigits: 12
+      }).format(number);
+    }
+
+    function calculate(expression) {
+      let clean = expression
+        .trim()
+        .replaceAll(" ", "")
+        .replaceAll("=", "")
+        .replaceAll("×", "*")
+        .replaceAll("÷", "/")
+        .replaceAll(",", ".")
+        .replaceAll("^", "**");
+
+      if (clean === "") {
+        return {
+          error: "Misol yozing."
+        };
+      }
+
+      const allowed = /^[0-9+\-*/().%]+$/;
+
+      if (!allowed.test(clean)) {
+        return {
+          error: "Faqat raqamlar va matematik belgilarni kiriting."
+        };
+      }
+
+      try {
+        const result = Function(
+          '"use strict"; return (' + clean + ');'
+        )();
+
+        if (
+          typeof result !== "number" ||
+          !Number.isFinite(result)
+        ) {
+          return {
+            error: "Bu misolni hisoblab bo‘lmadi."
+          };
+        }
+
+        return {
+          result: result
+        };
+      } catch (error) {
+        return {
+          error: "Misol noto‘g‘ri yozilgan. Qavslarni tekshiring."
+        };
+      }
+    }
+
+    function sendMessage() {
+      const text = mathInput.value.trim();
+
+      if (text === "") {
+        addMessage("Avval misol yozing.", "ai");
+        mathInput.focus();
+        return;
+      }
+
+      addMessage(text, "user");
+
+      const answer = calculate(text);
+
+      if (answer.error) {
+        addMessage(answer.error, "ai");
+      } else {
+        addMessage(
+          "Javob: " + formatNumber(answer.result),
+          "ai"
+        );
+      }
+
+      mathInput.value = "";
+      mathInput.focus();
+    }
+
+    sendButton.addEventListener("click", sendMessage);
+
+    mathInput.addEventListener("keydown", function(event) {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+
+    function setExample(example) {
+      mathInput.value = example;
+      mathInput.focus();
+    }
+  </script>
+
+</body>
+</html>
